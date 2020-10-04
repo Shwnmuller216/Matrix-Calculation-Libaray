@@ -1,0 +1,889 @@
+// Project 3
+// Date: 4/23/20
+// Author: Shawn Muller
+// scm216, 184006655
+#include <iostream>
+#include<stdio.h>
+#include<string.h>
+using namespace std;
+using std::ostream; // overloading output opertor
+using std::istream; // overloading input operator
+
+class Array {
+    public:
+    Array(); // constructor
+    ~Array();// destructor
+    void operator=(const Array& B);
+    void operator++(); //pre-increment
+    void operator++(int); //post-increment
+    void operator--(); //pre-decrement
+    void operator--(int); //post-decrement  
+    friend Array operator+(const Array& A,const Array& B);
+    friend Array operator-(const Array& A,const Array& B);
+    friend Array operator*(const Array& A,const Array& B); 
+    friend void operator+=(Array& A,const Array& B); 
+    friend void operator-=(Array& A,const Array& B); 
+    friend void operator*=(Array& A,const Array& B); 
+    friend ostream &operator<<( ostream &, const Array &);
+    friend istream &operator>>( istream &, Array &);
+    void create(int newM, int newN);
+    //project 2 functions
+    double det();
+    Array inverse();
+    Array transpose();
+    Array reshape(int newM, int newN);
+    Array resize(int newM, int newN);
+    private:
+    double** A;
+    int m;
+    int n;
+    int pm;
+};
+
+// constructor
+Array::Array(){
+    //initialize 2D dynamic array
+    A = new double*[1];    
+    A[0] = new double[1];
+    m = 1;
+    n = 1;
+    pm = 1;
+}
+
+// Destructor
+Array::~Array(){
+    //for(int i = 0; i < pm; i++)
+    //    delete [] A[i];
+    //delete [] A;
+}
+
+// delete and create new array
+void Array::create(int newM, int newN){
+    m = newM;
+    n = newN;
+    for(int i = 0; i < pm; i++)
+        delete A[i];
+    delete A;
+    A = new double*[m];
+    for(int i = 0; i < m; i++)
+        A[i] = new double[n];
+    // fill with 0
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < n; j++)
+            A[i][j] = 0;
+    pm = newM;
+}
+
+// overload "<<" operator
+ostream &operator<<(ostream &output, const Array &arr){
+    for(int i = 0; i < arr.m; i++){
+        for(int j = 0; j < arr.n; j++){
+            output << arr.A[i][j] << " ";
+        }    
+    output << endl;
+    }
+    return output;
+}
+
+// overload ">>" operator
+istream &operator>>( istream &input, Array &arr){
+    cout << "Enter array values" << endl;
+    for(int i = 0; i < arr.m; i++)
+        for(int j = 0; j < arr.n; j++){
+        cout << "Enter the [" << i << "," << j << "] " << "value for Matrix: "; 
+        input >> arr.A[i][j];
+        }    
+    return input;            
+}
+// overload = operator
+void Array::operator=(const Array& B){
+    A = B.A; 
+}
+// overload + operator to add two array objects
+Array operator+(const Array& A, const Array& B){
+    // dimensions are not the same
+    if(A.m != B.m || A.n != B.n){
+        cout << endl << "The matrices cannot be added" << endl;
+        cout << "By default, output is zero: " << endl;
+        Array C;
+        return C;
+    }    
+    else{
+        Array C;
+        C.create(B.m,B.n);
+        for(int i = 0; i < B.m; i++)
+            for(int j = 0; j < B.n; j++)
+                C.A[i][j] = A.A[i][j] + B.A[i][j];
+        return C;
+    }
+}
+
+// Overload - operator to subtract two array objects
+Array operator-(const Array& A, const Array& B){
+    // dimensions are not the same
+    if(A.m != B.m || A.n != B.n){
+        cout << endl << "The matrices cannot be subtratced" << endl;
+        cout << "By default, output is zero: " << endl;
+        Array C;
+        return C;
+    }    
+    else{
+        Array C;
+        C.create(B.m,B.n);
+        for(int i = 0; i < B.m; i++)
+            for(int j = 0; j < B.n; j++)
+                C.A[i][j] = A.A[i][j] - B.A[i][j];
+        return C;
+    }
+}
+      
+Array operator*(const Array& A, const Array& B){
+        if(A.n != B.m ){
+            cout << endl << "The matrices cannot be multiplied" << endl;
+            cout << "By default, output is zero: " << endl;
+            Array C;
+            return C;
+        }    
+        Array C;
+        C.create(A.m,B.n);
+        for(int i = 0; i < A.m; i++)
+            for(int j = 0; j < B.n; j++)
+                for(int k = 0; k < A.n; k++)
+                C.A[i][j] = C.A[i][j] + (A.A[i][k] * B.A[k][j]);
+        return C;
+      }      
+// Overload += operator to add two array objects      
+void operator+=(Array& A, const Array& B){
+    // invlaid matrices
+    if(A.m != B.m || A.n != B.n){
+        cout << endl << "The matrices cannot be added" << endl;
+    }    
+    else{
+    for(int i = 0; i < B.m; i++)
+        for(int j = 0; j < B.n; j++)
+            A.A[i][j] = A.A[i][j] + B.A[i][j];
+    }
+}
+// Overload -= operator to subtract two array objects
+void operator-=(Array& A, const Array& B){
+    if(A.m != B.m || A.n != B.n){
+        cout << endl << "The matrices cannot be subtracted" << endl;
+    } 
+    else{
+        for(int i = 0; i < B.m; i++)
+            for(int j = 0; j < B.n; j++)
+                A.A[i][j] = A.A[i][j] - B.A[i][j];
+    }
+}
+// Overload *= operator to multiply two array objects
+void operator*=(Array& A, const Array& B){
+    if(A.n != B.m ){
+        cout << endl << "The matrices cannot be multiplied" << endl;
+    }    
+    else{
+        Array C;
+        C.create(A.m,B.n);
+        for(int i = 0; i < A.m; i++)
+            for(int j = 0; j < B.n; j++)
+                for(int k = 0; k < A.n; k++)
+                    C.A[i][j] = C.A[i][j] + (A.A[i][k] * B.A[k][j]);
+        A.create(A.m,B.n);
+        A.A = C.A;
+    }
+}    
+// Overload ++ operator to increment an Array object(pre-increment)
+void Array::operator++(){
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < n; j++)
+            A[i][j] = A[i][j] + 1; 
+}
+// Overload ++ operator to increment an Array object(post-increment)
+void Array::operator++(int){
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < n; j++)
+            A[i][j] = A[i][j] + 1; 
+}
+// Overload -- operator to decrement an Array object(pre-decrement)
+void Array::operator--(){
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < n; j++)
+            A[i][j] = A[i][j] - 1; 
+}        
+// Overload -- operator to decrement an Array object(post-decrement)
+void Array::operator--(int){
+for(int i = 0; i < m; i++)
+    for(int j = 0; j < n; j++)
+            A[i][j] = A[i][j] - 1; 
+}          
+// -------------------------------------------------------------------------------------------
+//transpose a matrix
+Array Array::transpose(){
+    // make new matrix
+    Array trans;
+    trans.create(n,m);
+    //fill trans matrix    
+    for(int i = 0; i < n; i++)
+        for(int j = 0; j < m; j++)
+            trans.A[i][j] = A[j][i];
+    return trans;
+}
+
+// Determinant of a matrix
+double Array::det(){
+    if(m != n){
+        cout << "Cannot find Determinant" << endl;
+        cout << "By default output is zero: " << endl;
+        return 0;
+    }
+    int k = 1; //row swap counter var   
+    double temp;
+    //create an upper triangular matrix
+    double ut [m][m];
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < m; j++)
+            ut[i][j] = A[i][j];
+    // swap rows if pivot in the columns is zero
+    for(int i = 0; i < m; i++){
+        // check for zero in pivot
+        if(ut[i][i] == 0){
+            for(int j = i; j < m; j++){
+                // below pivot is not zero
+                if(ut[j][i] != 0){
+                    //swap the rows
+                    for(int k = 0; k < m; k++){
+                        temp = ut[i][k]; // set el of row i to temp    
+                        ut[i][k] = ut[j][k]; // set el of row i to row to el row j 
+                        ut[j][k] = temp;   // set el of row j to row to temp 
+                    }
+                k = -k; // keep track of det sign
+                }
+            }
+        }
+    }    
+    // make matrix an upper triangular matrix
+    for(int i = 0; i < m-1; i++){
+            for(int k = i; k < m-1; k++){
+                temp = ut[k+1][i]/ut[i][i];
+                for(int l = 0; l < m; l++){
+                    ut[k+1][l] = ut[k+1][l] - (temp)*ut[i][l];
+                    
+                }
+        }
+    }   
+    //multiply the diagonals of both matrices
+    double det = 1;
+    for(int i = 0; i < m; i++)
+        det = det*ut[i][i];
+    // multiply k
+    det = k*det;
+    if(det == -0 || det != det)
+        det = 0;
+    return det;
+}
+
+// inverse of a matrix
+Array Array::inverse(){
+    Array B;
+    B.create(m,n);
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < n; j++)
+            B.A[i][j] = A[i][j];
+    Array A3;
+    A3.create(m,n);
+    A3.A = A;
+    Array t;
+    if(m != n){
+        cout << "Cannot find Inverse" << endl;
+        cout << "By default output is zero: " << endl;
+        return t;
+    }
+    else if(m == 1){
+        A3.A[0][0] = 1.0/A3.A[0][0];
+        return t;
+    }
+    else if(A3.det() == 0){
+        cout << "The matrix does not have an Inverse" << endl;
+        return t;
+    }
+    else{
+         //make inverse matrix equal to Im
+        Array inv;
+        inv.create(m,m);
+        for(int i = 0; i < m; i++)
+            for(int j = 0; j < m; j++){
+                if(i == j)
+                    inv.A[i][j] = 1.0;
+                else
+                    inv.A[i][j] = 0.0;
+            }    
+         double temp;
+         // swap rows if pivot in the columns is zero
+        for(int i = 0; i < m; i++){
+            // check for zero in pivot
+            if(A3.A[i][i] == 0){
+                for(int j = i; j < m; j++){
+                    // below pivot is not zero
+                    if(A3.A[j][i] != 0){
+                        //swap the rows
+                        for(int k = 0; k < m; k++){
+                            //swap A3
+                            temp = A3.A[i][k]; // set el of row i to temp    
+                            A3.A[i][k] = A3.A[j][k]; // set el of row i to row to el row j 
+                            A3.A[j][k] = temp;   // set el of row j to row to temp
+                            //swap inv
+                            temp = inv.A[i][k]; // set el of row i to temp    
+                            inv.A[i][k] = inv.A[j][k]; // set el of row i to row to el row j 
+                            inv.A[j][k] = temp;   // set el of row j to row to temp
+                        }
+                    }
+                }
+            }
+        }    
+        
+        //Find Inverse of a matrix
+         
+        // perform rref(A3) and do the same row ops on inverse
+        // rref first half
+        for(int i = 0; i < m-1; i++){
+            // make the pivot in the column equal to 1
+            temp = 1/A3.A[i][i];
+            for(int j = 0; j < m; j++){
+                if(A3.A[i][i]/A3.A[i][i] == -1){ // negative pivot
+                    A3.A[i][j] = -(temp)*A3.A[i][j];  // Rm = -(1/Pm)*Rm  
+                    inv.A[i][j] = -(temp)*inv.A[i][j];
+                }
+                else{
+                    A3.A[i][j] = (temp)*A3.A[i][j];  // Rm = (1/Pm)*Rm
+                    inv.A[i][j] = (temp)*inv.A[i][j];
+                }
+            }    
+                // add rows
+                for(int k = i; k < m-1; k++){
+                    temp = A3.A[k+1][i]/A3.A[i][i];
+                    for(int l = 0; l < m; l++){
+                        A3.A[k+1][l] = A3.A[k+1][l] - (temp)*A3.A[i][l];
+                        inv.A[k+1][l] = inv.A[k+1][l] - (temp)*inv.A[i][l];
+                    }
+            }
+        }
+        // rref second half
+        for(int i = m-1; i >= 1; i--){
+            // make the pivot in the column equal to 1
+            temp = 1/A3.A[i][i];
+            for(int j = m-1; j >= 0; j--){
+                if(A3.A[i][i]/A3.A[i][i] == -1){ // negative pivot
+                    A3.A[i][j] = -(temp)*A3.A[i][j];  // Rm = -(1/Pm)*Rm  
+                    inv.A[i][j] = -(temp)*inv.A[i][j];
+                }
+                else{
+                    A3.A[i][j] = (temp)*A3.A[i][j];  // Rm = (1/Pm)*Rm
+                    inv.A[i][j] = (temp)*inv.A[i][j];
+                }
+            }    
+                // add rows
+                for(int k = i; k >= 1; k--){
+                    temp = A3.A[k-1][i]/A3.A[i][i];
+                    for(int l = m-1; l >= 0; l--){
+                        A3.A[k-1][l] = A3.A[k-1][l] - (temp)*A3.A[i][l];
+                        inv.A[k-1][l] = inv.A[k-1][l] - (temp)*inv.A[i][l];
+                    }
+            }
+        }
+        A = B.A;
+        return inv; 
+    }
+}
+
+//reshape a matrix
+Array Array::reshape(int newM,int newN){
+    //check that the number of cells in both arrays are equal
+    if(n*m != newM*newN){
+        cout << "Matrix cannot be reshaped" << endl;
+        Array C;
+        return C;
+    }
+    int count = 0;
+    double temp[m*n]; // temp array for A3 values
+    //fill temp with A3
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < n; j++){
+            temp[count] = A[i][j];
+            count++;
+        }
+    // reshape matrix
+    Array C;
+    C.create(newM,newN);
+    // fill A3 with old A3 values
+    count = 0;
+    for(int i = 0; i < newM; i++)
+        for(int j = 0; j < newN; j++){
+            C.A[i][j] = temp[count];
+            count++;
+        }
+    return C;
+}
+
+// resize a matrix
+Array Array::resize(int newM, int newN){
+    Array C;
+    C.create(newM,newN);
+    //fill A3 with zeros
+    for(int i = 0; i < newM; i++)
+        for(int j = 0; j < newN; j++)
+            C.A[i][j] = 0;
+    // fill A3 with old A3 values
+    if(newM < m && newN < n){
+        for(int i = 0; i < newM; i++)
+            for(int j = 0; j < newN; j++)
+                C.A[i][j] = A[i][j];
+    }
+    else if(newM > m && newN < n){
+        for(int i = 0; i < m; i++)
+            for(int j = 0; j < newN; j++)
+                C.A[i][j] = A[i][j];
+    }
+    else if(newM < m && newN > n){
+        for(int i = 0; i < newM; i++)
+            for(int j = 0; j < n; j++)
+                C.A[i][j] = A[i][j];
+    }
+    else{
+        for(int i = 0; i < m; i++)
+            for(int j = 0; j < n; j++)
+                C.A[i][j] = A[i][j];
+    }
+    return C;
+}
+      
+
+int main(){
+    // initialize Array objects
+    int m1,n1,m2,n2;
+    Array A1;
+    Array A2;
+    Array A3;
+    char op[] = "pie"; //operation variable
+    // loop until user types 'exit'
+    while(strcmp(op,"exit") != 0){
+        cout << "Menu:" << endl;
+        cout << " 1. Add" << endl;
+        cout << " 2. Subtract" << endl;
+        cout << " 3. Multiply" << endl;
+        cout << " 4. Add Equal" << endl;
+        cout << " 5. Subtract Equal" << endl;
+        cout << " 6. Multiply Equal" << endl;
+        cout << " 7. Increment" << endl;
+        cout << " 8. Decrement" << endl;
+        cout << " 9. Equal" << endl;
+        cout << "10. Determinant" << endl;
+        cout << "11. Inverse" << endl;
+        cout << "12. Transpose" << endl;
+        cout << "13. Reshape" << endl;
+        cout << "14. Resize" << endl;
+        cout << "Type 'exit' to end the program" << endl;
+        cout << "Type the number of which operation you want to perform: " ;
+        cin >> op;  // operation input var
+        // Add
+        if(strcmp(op,"1") == 0){
+            cout << endl;
+            cout << "Matrix Addition" << endl;
+            cout << endl;
+            // Get dimensions of the matrices
+            cout << "Number of rows for the matrices: ";
+            cin >> m1;
+            cout << "Number of columns for the matrices: ";
+            cin >> n1;
+            // check that dimensions are greater than zero
+            if(m1 < 1 || n1 < 1){
+                cout << "Dimensions cannot be negative" << endl;
+            }
+            // perfrom matrix addition
+            else{
+                //create A1 and A2
+                A1.create(m1,n1);
+                A2.create(m1,n1);
+                // input for A1 and A2
+                cin >> A1;
+                cin >> A2;
+                // output addition
+                cout << endl << A1 + A2 << endl;
+            }    
+        }    
+        // Subtract
+        else if(strcmp(op,"2") == 0){
+            cout << endl;
+            cout << "Matrix Subtraction" << endl;
+            cout << endl;
+            // Get dimensions of the matrices
+            cout << "Number of rows for the matrices: ";
+            cin >> m1;
+            cout << "Number of columns for the matrices: ";
+            cin >> n1;
+            // check that dimensions are greater than zero
+            if(m1 < 1 || n1 < 1){
+                cout << "Dimensions cannot be negative" << endl;
+            }
+            // perfrom matrix Subtraction
+            else{
+                //create A1 and A2
+                A1.create(m1,n1);
+                A2.create(m1,n1);
+                // input for A1 and A2
+                cin >> A1;
+                cin >> A2;
+                // output addition
+                cout << endl << A1 - A2 << endl;
+            }    
+        } 
+        
+        // Multiply
+        else if(strcmp(op,"3") == 0){
+            cout << endl;
+            cout << "Matrix Multiplication" << endl;
+            cout << endl;
+            // Get dimensions of the matrices
+            cout << "Number of rows for Matrix 1: ";
+            cin >> m1;
+            cout << "Number of columns for Matrix 1: ";
+            cin >> n1;
+            cout << "Number of rows for Matrix 2: ";
+            cin >> m2;
+            cout << "Number of columns for Matrix 2: ";
+            cin >> n2;
+            // check that dimensions are greater than zero
+            if(m1 < 1 || n1 < 1 || m2 < 1|| n2 < 1){
+                cout << "Dimensions cannot be negative" << endl;
+            }
+            // proper Dimensions
+            else if(n1 != m2){
+                cout << "Improper Dimensions" << endl;
+            }
+            // perfrom matrix Multiplication
+            else{
+                //create A1 and A2
+                A1.create(m1,n1);
+                A2.create(m2,n2);
+                // input for A1 and A2
+                cin >> A1;
+                cin >> A2;
+                // output addition
+                cout << endl << A1*A2 << endl;  
+            }    
+        }    
+        // Add Equal
+        else if(strcmp(op,"4") == 0){
+            cout << endl;
+            cout << "Matrix Addition Equal" << endl;
+            cout << endl;
+            // Get dimensions of the matrices
+            cout << "Number of rows for the matrices: ";
+            cin >> m1;
+            cout << "Number of columns for the matrices: ";
+            cin >> n1;
+            // check that dimensions are greater than zero
+            if(m1 < 1 || n1 < 1){
+                cout << "Dimensions cannot be negative" << endl;
+            }
+            // perfrom matrix addition
+            else{
+                //create A1 and A2
+                A1.create(m1,n1);
+                A2.create(m1,n1);
+                // input for A1 and A2
+                cin >> A1;
+                cin >> A2;
+                // output addition
+                A1+=A2;
+                cout << endl << A1 << endl;
+            }    
+        }    
+        
+        // Subtract Equal
+        else if(strcmp(op,"5") == 0){
+            cout << endl;
+            cout << "Matrix Subtraction Equal" << endl;
+            cout << endl;
+            // Get dimensions of the matrices
+            cout << "Number of rows for the matrices: ";
+            cin >> m1;
+            cout << "Number of columns for the matrices: ";
+            cin >> n1;
+            // check that dimensions are greater than zero
+            if(m1 < 1 || n1 < 1){
+                cout << "Dimensions cannot be negative" << endl;
+            }
+            // perfrom matrix Subtraction
+            else{
+                //create A1 and A2
+                A1.create(m1,n1);
+                A2.create(m1,n1);
+                // input for A1 and A2
+                cin >> A1;
+                cin >> A2;
+                // output addition
+                A1-=A2;
+                cout << endl << A1 << endl;
+            }    
+        } 
+        
+        // Multiply Eqaul
+        else if(strcmp(op,"6") == 0){
+            cout << endl;
+            cout << "Matrix Multiplication" << endl;
+            cout << endl;
+            // Get dimensions of the matrices
+            cout << "Number of rows for Matrix 1: ";
+            cin >> m1;
+            cout << "Number of columns for Matrix 1: ";
+            cin >> n1;
+            cout << "Number of rows for Matrix 2: ";
+            cin >> m2;
+            cout << "Number of columns for Matrix 2: ";
+            cin >> n2;
+            // check that dimensions are greater than zero
+            if(m1 < 1 || n1 < 1 || m2 < 1|| n2 < 1){
+                cout << "Dimensions cannot be negative" << endl;
+            }
+            // proper Dimensions
+            else if(n1 != m2){
+                cout << "Improper Dimensions" << endl;
+            }
+            // perfrom matrix Multiplication
+            else{
+                //create A1 and A2
+                A1.create(m1,n1);
+                A2.create(m2,n2);
+                // input for A1 and A2
+                cin >> A1;
+                cin >> A2;
+                // output addition
+                A1*=A2;
+                cout << endl << A1 << endl; 
+            }    
+        }    
+        
+        // Increment
+       else if(strcmp(op,"7") == 0){
+            cout << endl;
+            cout << "Increment" << endl;
+            cout << endl;
+            // Get dimensions of the matrices
+            cout << "Number of rows for the matrix: ";
+            cin >> m1;
+            cout << "Number of columns for the matrix: ";
+            cin >> n1;
+            // check that dimensions are greater than zero
+            if(m1 < 1 || n1 < 1){
+                cout << "Dimensions cannot be negative" << endl;
+            }
+            else{
+                //create A1
+                A1.create(m1,n1);
+                // input for A1
+                cin >> A1;
+                // output addition
+                A1++;
+                cout << endl << A1 << endl;  
+            }    
+        }   
+        
+        // Decrement
+       else if(strcmp(op,"8") == 0){
+            cout << endl;
+            cout << "Decrement" << endl;
+            cout << endl;
+            // Get dimensions of the matrices
+            cout << "Number of rows for the matrix: ";
+            cin >> m1;
+            cout << "Number of columns for the matrix: ";
+            cin >> n1;
+            // check that dimensions are greater than zero
+            if(m1 < 1 || n1 < 1){
+                cout << "Dimensions cannot be negative" << endl;
+            }
+            else{
+                //create A1
+                A1.create(m1,n1);
+                // input for A1
+                cin >> A1;
+                // output addition
+                A1--;
+                cout << endl << A1 << endl;  
+            }    
+        }
+        
+        // Equal
+        else if(strcmp(op,"9") == 0){
+            cout << endl;
+            cout << "Matrix Equal" << endl;
+            cout << endl;
+            // Get dimensions of the matrices
+            cout << "Number of rows for the matrix: ";
+            cin >> m1;
+            cout << "Number of columns for the matrix: ";
+            cin >> n1;
+            // check that dimensions are greater than zero
+            if(m1 < 1 || n1 < 1){
+                cout << "Dimensions cannot be negative" << endl;
+            }
+            // perfrom matrix addition
+            else{
+                //create A1 and A2
+                A1.create(m1,n1);
+                A2.create(m1,n1);
+                // input for A1 and A2
+                cin >> A1;
+                cin >> A2;
+                // output equal
+                A1 = A2;
+                cout << endl << A1 << endl;
+            }    
+        }
+        
+        // Determinant
+        else if(strcmp(op,"10") == 0){
+            cout << endl;
+            cout << "Determinant" << endl;
+            cout << endl;
+            // Get dimensions of each array
+            cout << "Number of rows for the matrix: ";
+            cin >> m1;
+            cout << "Number of columns for the matrix: ";
+            cin >> n1;
+            // check that dimensions are greater than zero
+            if(m1 < 1 || n1 < 1){
+                cout << "Dimensions cannot be negative" << endl;
+            }
+            else if(m1 != n1){
+                cout << endl <<"Matrix must be a Square Matrix" << endl;
+            }
+            else{
+            //create A1
+                A1.create(m1,n1);
+                // input for A1
+                cin >> A1;
+                // output addition
+                cout << endl<< "The Determinant is: " << A1.det() << endl;
+            }
+        }
+        
+        // Determinant
+        else if(strcmp(op,"11") == 0){
+            cout << endl;
+            cout << "Inverse" << endl;
+            cout << endl;
+            // Get dimensions of each array
+            cout << "Number of rows for the matrix: ";
+            cin >> m1;
+            cout << "Number of columns for the matrix: ";
+            cin >> n1;
+            // check that dimensions are greater than zero
+            if(m1 < 1 || n1 < 1){
+                cout << "Dimensions cannot be negative" << endl;
+            }
+            else if(m1 != n1){
+                cout << endl <<"Matrix must be a Square Matrix" << endl;
+            }
+            else{
+                //create A1
+                A1.create(m1,n1);
+                // input for A1
+                cin >> A1;
+                // output addition
+                cout << endl<< "The Inverse is: " << endl << A1.inverse() << endl;
+            }
+        }
+        
+         // Transpose
+        else if(strcmp(op,"12") == 0){
+            cout << endl;
+            cout << "Transpose" << endl;
+            cout << endl;
+            // Get dimensions of each array
+            cout << "Number of rows for the matrix: ";
+            cin >> m1;
+            cout << "Number of columns for the matrix: ";
+            cin >> n1;
+            // check that dimensions are greater than zero
+            if(m1 < 1 || n1 < 1){
+                cout << "Dimensions cannot be negative" << endl;
+            }
+            else{
+                //create A1
+                A1.create(m1,n1);
+                // input for A1
+                cin >> A1;
+                //output
+                cout << endl << "Transpose of the Matrix:" << endl << A1.transpose() << endl; 
+            }
+        }
+        
+        // Reshape
+        else if(strcmp(op,"13") == 0){
+            cout << endl;
+            cout << "Reshape" << endl;
+            cout << endl;
+            // Get dimensions of each array
+            cout << "Number of rows for the matrix: ";
+            cin >> m1;
+            cout << "Number of columns for the matrix: ";
+            cin >> n1;
+            // check that dimensions are greater than zero
+            if(m1 < 1 || n1 < 1){
+                cout << "Dimensions cannot be negative" << endl;
+            }
+            else{
+                //create A1
+                A1.create(m1,n1);
+                // input for A1
+                cin >> A1;
+                // Get dimensions of new array
+                cout << endl << "Number of rows for the new matrix: ";
+                cin >> m1;
+                cout << "Number of columns for the new matrix: ";
+                cin >> n1;
+                // reshape
+                cout << endl << A1.reshape(m1,n1) << endl;
+            }
+        }
+        
+        // Resize
+        else if(strcmp(op,"14") == 0){
+            cout << endl;
+            cout << "Resize" << endl;
+            cout << endl;
+            // Get dimensions of each array
+            cout << "Number of rows for the matrix: ";
+            cin >> m1;
+            cout << "Number of columns for the matrix: ";
+            cin >> n1;
+            // check that dimensions are greater than zero
+            if(m1 < 1 || n1 < 1){
+                cout << "Dimensions cannot be negative" << endl;
+            }
+            else{
+                //create A1
+                A1.create(m1,n1);
+                // input for A1
+                cin >> A1;
+                // Get dimensions of new array
+                cout << endl << "Number of rows for the new matrix: ";
+                cin >> m1;
+                cout << "Number of columns for the new matrix: ";
+                cin >> n1;
+                // reshape
+                cout << endl << A1.resize(m1,n1) << endl;
+            }
+        }
+        
+        else if(strcmp(op,"exit") == 0){
+            continue;
+        }
+        // Invalid input
+        else{
+            cout << endl << "Invlaid Input" << endl;
+        }
+        
+    }
+
+}
