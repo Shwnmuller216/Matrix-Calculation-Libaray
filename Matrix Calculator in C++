@@ -1,0 +1,764 @@
+// Project 2
+// Date: 4/01/20
+// Author: Shawn Muller
+// scm216, 184006655
+#include <iostream>
+#include<stdio.h>
+#include<string.h>
+using namespace std;
+
+//reshape a matrix
+double** reshape(double** A3,int pm3,int pn3,int m, int n){
+    int count = 0;
+    double temp[m*n]; // temp array for A3 values
+    //fill temp with A3
+    for(int i = 0; i < pm3; i++)
+        for(int j = 0; j < pn3; j++){
+            temp[count] = A3[i][j];
+            count++;
+        }
+    // delete A3        
+    for(int i = 0; i < pm3; i++){
+    delete[] A3[i];
+    }
+    delete[] A3;
+    // reshape A3
+    A3 = new double*[m];
+    for(int i = 0; i < m; i++)  
+        A3[i] = new double[n];
+    // fill A3 with old A3 values
+    count = 0;
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < n; j++){
+            A3[i][j] = temp[count];
+            count++;
+        }
+    return A3;
+}
+
+// resize a matrix
+double** resize(double** A3,int pm3,int pn3,int m, int n){
+    double temp[m][n]; // temp array for A3 values
+    //fill temp with A3
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < n; j++){
+            if(i < pm3 && j < pn3)
+                temp[i][j] = A3[i][j];
+            else
+                temp[i][j] = 0;
+        }        
+    // delete A3        
+    for(int i = 0; i < pm3; i++){
+    delete[] A3[i];
+    }
+    delete[] A3;
+    // resize A3
+    A3 = new double*[m];
+    for(int i = 0; i < m; i++)  
+        A3[i] = new double[n];
+    //fill A3 with zeros
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < n; j++)
+            A3[i][j] = 0;
+    // fill A3 with old A3 values
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < n; j++)
+            A3[i][j] = temp[i][j];
+    return A3;
+}
+
+
+// inverse of a matrix
+double** inverse(int m,double** A3){
+     if(m == 1){
+        A3[0][0] = 1/A3[0][0];
+        cout << endl << "Inverse:" << endl;
+        cout << A3[0][0] << endl;
+        return A3;
+     }
+     //make inverse matrix equal to Im
+    double inv[m][m];
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < m; j++){
+            if(i == j)
+                inv[i][j] = 1.0;
+            else
+                inv[i][j] = 0.0;
+        }    
+     double temp;
+     // swap rows if pivot in the columns is zero
+    for(int i = 0; i < m; i++){
+        // check for zero in pivot
+        if(A3[i][i] == 0){
+            for(int j = i; j < m; j++){
+                // below pivot is not zero
+                if(A3[j][i] != 0){
+                    //swap the rows
+                    for(int k = 0; k < m; k++){
+                        //swap A3
+                        temp = A3[i][k]; // set el of row i to temp    
+                        A3[i][k] = A3[j][k]; // set el of row i to row to el row j 
+                        A3[j][k] = temp;   // set el of row j to row to temp
+                        //swap inv
+                        temp = inv[i][k]; // set el of row i to temp    
+                        inv[i][k] = inv[j][k]; // set el of row i to row to el row j 
+                        inv[j][k] = temp;   // set el of row j to row to temp
+                    }
+                }
+            }
+        }
+    }    
+    
+    //Find Inverse of a matrix
+     
+    // perform rref(A3) and do the same row ops on inverse
+    // rref first half
+    for(int i = 0; i < m-1; i++){
+        // make the pivot in the column equal to 1
+        temp = 1/A3[i][i];
+        for(int j = 0; j < m; j++){
+            if(A3[i][i]/A3[i][i] == -1){ // negative pivot
+                A3[i][j] = -(temp)*A3[i][j];  // Rm = -(1/Pm)*Rm  
+                inv[i][j] = -(temp)*inv[i][j];
+                //for(int a = 0; a < m; a++){
+                //        for(int b = 0; b < m; b++){
+                //            cout << A3[a][b] << " ";
+                //        }
+                //        cout << endl;
+                //        }
+            }
+            else{
+                A3[i][j] = (temp)*A3[i][j];  // Rm = (1/Pm)*Rm
+                inv[i][j] = (temp)*inv[i][j];
+                //for(int a = 0; a < m; a++){
+                //        for(int b = 0; b < m; b++){
+                //            cout << A3[a][b] << " ";
+                //        }
+                //        cout << endl;
+                //        }
+            }
+        }    
+            // add rows
+            for(int k = i; k < m-1; k++){
+                temp = A3[k+1][i]/A3[i][i];
+                for(int l = 0; l < m; l++){
+                    A3[k+1][l] = A3[k+1][l] - (temp)*A3[i][l];
+                    inv[k+1][l] = inv[k+1][l] - (temp)*inv[i][l];
+                    //for(int a = 0; a < m; a++){
+                    //    for(int b = 0; b < m; b++){
+                    //        cout << A3[a][b] << " ";
+                    //    }
+                    //    cout << endl;
+                    //    }
+                }
+        }
+    }
+    // rref second half
+    for(int i = m-1; i >= 1; i--){
+        // make the pivot in the column equal to 1
+        temp = 1/A3[i][i];
+        for(int j = m-1; j >= 0; j--){
+            if(A3[i][i]/A3[i][i] == -1){ // negative pivot
+                A3[i][j] = -(temp)*A3[i][j];  // Rm = -(1/Pm)*Rm  
+                inv[i][j] = -(temp)*inv[i][j];
+                //for(int a = 0; a < m; a++){
+                //        for(int b = 0; b < m; b++){
+                //            cout << inv[a][b] << " ";
+                //        }
+                //        cout << endl;
+                //        }
+            }
+            else{
+                A3[i][j] = (temp)*A3[i][j];  // Rm = (1/Pm)*Rm
+                inv[i][j] = (temp)*inv[i][j];
+                //for(int a = 0; a < m; a++){
+                //        for(int b = 0; b < m; b++){
+                //            cout << A3[a][b] << " ";
+                //        }
+                //        cout << endl;
+                //        }
+            }
+        }    
+            // add rows
+            for(int k = i; k >= 1; k--){
+                temp = A3[k-1][i]/A3[i][i];
+                for(int l = m-1; l >= 0; l--){
+                    A3[k-1][l] = A3[k-1][l] - (temp)*A3[i][l];
+                    inv[k-1][l] = inv[k-1][l] - (temp)*inv[i][l];
+                     //print
+                    //for(int a = 0; a < m; a++){
+                    //    for(int b = 0; b < m; b++){
+                    //        cout << A3[a][b] << " ";
+                    //    }
+                    //    cout << endl;
+                    //    }
+                }
+        }
+    }
+    
+    cout << endl << "Inverse:" << endl;
+    //print
+    for(int i = 0; i < m; i++){
+        for(int j = 0; j < m; j++){
+            cout << inv[i][j] << " ";
+        }
+    cout << endl;
+    }
+    //fill A3 with inverse matrix
+    return A3;
+}
+
+//transpose a matrix
+void transpose(int m, int n, double** A3){
+    // make new matrix
+    double trans[n][m];
+    //fill trans matrix    
+    for(int i = 0; i < n; i++)
+        for(int j = 0; j < m; j++){
+            trans[i][j] = A3[j][i];
+        }
+    // print transpose A3    
+    for(int i = 0; i < n; i++){
+        for(int j = 0; j < m; j++){
+            cout << trans[i][j] << " ";
+        }
+    cout << endl;
+    }
+}
+// Determinant of a matrix
+double det(int m,double** A3){
+    int k = 1; //row swap counter var   
+    double temp;
+    //create an upper triangular matrix
+    double ut [m][m];
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < m; j++)
+            ut[i][j] = A3[i][j];
+    // swap rows if pivot in the columns is zero
+    for(int i = 0; i < m; i++){
+        // check for zero in pivot
+        if(ut[i][i] == 0){
+            for(int j = i; j < m; j++){
+                // below pivot is not zero
+                if(ut[j][i] != 0){
+                    //swap the rows
+                    for(int k = 0; k < m; k++){
+                        temp = ut[i][k]; // set el of row i to temp    
+                        ut[i][k] = ut[j][k]; // set el of row i to row to el row j 
+                        ut[j][k] = temp;   // set el of row j to row to temp 
+                    }
+                k = -k; // keep track of det sign
+                }
+            }
+        }
+    }    
+    //print ut
+    //for(int i = 0; i < m; i++){
+    //    for(int j = 0; j < m; j++){
+    //        cout << ut[i][j] << " ";
+    //    }
+    //cout << endl << endl;
+    //} 
+    // make matrix an upper triangular matrix
+    for(int i = 0; i < m-1; i++){
+            for(int k = i; k < m-1; k++){
+                temp = ut[k+1][i]/ut[i][i];
+                for(int l = 0; l < m; l++){
+                    ut[k+1][l] = ut[k+1][l] - (temp)*ut[i][l];
+                    
+                }
+        }
+    }   
+    //multiply the diagonals of both matrices
+    double det = 1;
+    for(int i = 0; i < m; i++)
+        det = det*ut[i][i];
+    //print the determinant
+    det = k*det;
+    if(det == -0)
+        det = 0;
+    return det;
+}
+
+// prnt an array
+void prnt(int m3, int n3, double **A3){
+//cout << m3 << " " << n3 << endl;
+cout << endl << "Result:" << endl;
+for(int i = 0; i < m3; i++){
+    for(int j = 0; j < n3; j++)
+        cout << A3[i][j] << " ";
+    cout << endl;
+}
+}
+// add two arrays
+double** Add(int m, int n, int pm3, double **A1,double **A2, double **A3){
+    //cout << m << " " << n << endl;
+    //cout << pm3 << endl;
+    // delete old array
+    for(int i = 0; i < pm3; i++){
+    delete[] A3[i];
+    }
+    delete[] A3;
+    // make new array
+    A3 = new double*[m]; //rows
+    for(int i = 0; i < m; i++) //rows
+        A3[i] = new double[n];
+    //fill A3 with zeros
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < n; j++)
+            A3[i][j] = 0;
+    //fill A3
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < n; j++)
+            A3[i][j] = A1[i][j] + A2[i][j];
+    //cout << "end of Add function " << endl;
+    return A3;
+}
+// subtract two arrays
+double** Subtract(int m, int n, int pm3, double **A1,double **A2,double **A3){
+    //cout << m << " " << n << endl;
+    //cout << pm3 << endl;
+    // delete old array
+    for(int i = 0; i < pm3; i++){
+    delete[] A3[i];
+    }
+    delete[] A3;
+    // make new array
+    A3 = new double*[m]; //rows
+    for(int i = 0; i < m; i++) //rows
+        A3[i] = new double[n];
+    //fill A3 with zeros
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < n; j++)
+            A3[i][j] = 0;
+    //fill A3
+    for(int i = 0; i < m; i++)
+        for(int j = 0; j < n; j++)
+            A3[i][j] = A1[i][j] - A2[i][j];
+    
+    return A3;
+}
+// Multiply two arrays
+double** Multiply(int m1, int m2, int n1, int n2, int pm3,double **A1,double **A2,double **A3){
+    //cout << m1 << " " << n2 << endl;
+    //cout << pm3 << endl;
+    // delete old array
+    for(int i = 0; i < pm3; i++){
+    delete[] A3[i];
+    }
+    delete[] A3;
+    // make new array
+    A3 = new double*[m1]; //rows
+    for(int i = 0; i < m1; i++)    //rows
+        A3[i] = new double[n2];
+    //fill A3 with zeros
+    for(int i = 0; i < m1; i++)
+        for(int j = 0; j < n2; j++)
+            A3[i][j] = 0;
+    //fill A3
+    for(int i = 0; i < m1; i++)//{
+        for(int j = 0; j < n2; j++)//{
+            for(int k = 0; k < n1; k++)//{
+                A3[i][j] = A3[i][j] + (A1[i][k] * A2[k][j]);
+    
+    return A3;               
+}
+
+// Fill two arrays from user input
+double** input_arrays(int m1, int m2, int n2, int n1, int pm1, int pm2, int pm3,double **A1,double **A2, double** A3, int error, int A){
+    //cout << m1 << " " << n1 << endl;
+    if(error == 1)
+        m1 = m2; // Do nothing since the user input is not valid
+    else{
+    cout << endl;
+    if(A == 1){
+        //delete old A1
+        for(int i = 0; i < pm1; i++){
+            delete[] A1[i];
+        }
+        delete[] A1;
+        // make new A1
+        A1 = new double*[m1]; //rows
+        for(int i = 0; i < m1; i++)    //rows
+            A1[i] = new double[n1];
+        // fill A1 with user input
+        for(int i = 0; i < m1; i++)
+            for(int j = 0; j < n1; j++){
+                cout << "Enter the [" << i << "," << j << "] " << "value for Matrix 1: ";
+                cin >> A1[i][j];
+    } 
+    return A1;
+    }
+    else if(A == 2){
+    //delete old A2
+    for(int i = 0; i < pm2; i++){
+    delete[] A2[i];
+    }
+    delete[] A2;
+    // make new A2
+    A2 = new double*[m2]; //rows
+    for(int i = 0; i < m2; i++)    //rows
+        A2[i] = new double[n2];        
+            
+    // fill A2 with user input
+    for(int i = 0; i < m2; i++)
+        for(int j = 0; j < n2; j++){
+            cout << "Enter the [" << i << "," << j << "] " << "value for Matrix 2: ";
+            cin >> A2[i][j];
+    }
+     return A2;
+        }
+    else{
+    //cout << pm3 << " " << m1 << " " << n1 << endl;    
+        //delete old A3
+    for(int i = 0; i < pm3; i++){
+    delete[] A3[i];
+    }
+    delete[] A3;
+    // make new A3
+    A3 = new double*[m1]; //rows
+    for(int i = 0; i < m1; i++)    //rows
+        A3[i] = new double[n1];        
+            
+    // fill A2 with user input
+    for(int i = 0; i < m1; i++)
+        for(int j = 0; j < n1; j++){
+            cout << "Enter the [" << i << "," << j << "] " << "value for the Matrix: ";
+            cin >> A3[i][j];
+    }
+     return A3;
+    }
+    }
+}
+
+int main(){
+// initialize all variables and arrays
+int m1,n1,m2,n2,pm1,pm2,pm3,pn3;
+int error = 0;
+m1 = 1;
+m2 = 1;
+pm1 = 1;
+pm2 = 1;
+pm3 = 1;
+double **A1 = new double*[1];
+for(int i = 0; i < 1; i++){
+A1[i] = new double[1];
+}
+double **A2 = new double*[1];
+for(int i = 0; i < 1; i++){
+A2[i] = new double[1];
+}
+double **A3 = new double*[1];
+for(int i = 0; i < 1; i++){
+A3[i] = new double[1];
+}
+char op[] = "pie"; //operation variable
+// loop until user types 'exit'
+while(strcmp(op,"exit") != 0){
+    cout << "Menu:" << endl;
+    cout << "1. Add" << endl;
+    cout << "2. Subtract" << endl;
+    cout << "3. Multiply" << endl;
+    cout << "4. Determinant" << endl;
+    cout << "5. Inverse" << endl;
+    cout << "6. Transpose" << endl;
+    cout << "7. Reshape" << endl;
+    cout << "8. Resize" << endl;
+    cout << "Type 'exit' to end the program" << endl;
+    cout << "Type which operation you want to perform: " ;
+    cin >> op;  // operation input var
+    if(strcmp(op,"Add") == 0){
+        cout << endl;
+        cout << "Matrix Addition" << endl;
+        cout << endl;
+        // Get dimensions of each array
+        cout << "Number of rows for matrix 1: ";
+        cin >> m1;
+        cout << "Number of columns for matrix 1: ";
+        cin >> n1;
+        cout << "Number of rows for matrix 2: ";
+        cin >> m2;
+        cout << "Number of columns for matrix 2: ";
+        cin >> n2;
+        // check that row and col size are less than 11
+        if(m1 > 10 || n1 > 10 || m2 > 10 || n2 > 10 || m1 < 1 || n1 < 1 || m2 < 1 || n2 < 1){
+            error = 1;
+            cout << "Error: Row or column size exceeds 10" << endl << endl;
+        }
+        //check that A1 and A2 are the same dimensions
+        else if(m1 != m2 || n1 != n2){
+            error = 1;
+            cout << "The dimensions of the Matrices are not equal" << endl << endl;
+        }
+        else{
+            A1 = input_arrays(m1,m2,n2,n1, pm1,pm2,pm3,A1,A2,A3,error,1); // call input matrix fnc
+            A2 = input_arrays(m1,m2,n2,n1,pm1,pm2,pm3,A1,A2,A3,error,2);
+            //cout << "Before Add function" << endl;
+            A3 = Add(m1, n1, pm3,A1, A2, A3); // call add matrix fnc
+            //cout << "After Add function" << endl;
+            prnt(m1,n1,A3);// call prnt matrix fnc
+            cout << endl;
+            pm1 = m1;
+            pm2 = m2;
+            pm3 = m1;
+            pn3 = m1;
+            //cout << pm3 << endl;
+        }
+}
+    else if(strcmp(op,"Subtract") == 0){
+        cout << endl;
+        cout << "Matrix Subtraction" << endl;
+        cout << endl;
+        // Get dimensions of each array
+        cout << "Number of rows for matrix 1: ";
+        cin >> m1;
+        cout << "Number of columns for matrix 1: ";
+        cin >> n1;
+        cout << "Number of rows for matrix 2: ";
+        cin >> m2;
+        cout << "Number of columns for matrix 2: ";
+        cin >> n2;
+        // check that row and col size are less than 11
+        if(m1 > 10 || n1 > 10 || m2 > 10 || n2 > 10 || m1 < 1 || n1 < 1 || m2 < 1 || n2 < 1){
+            error = 1;
+            cout << "Error: Row or column size exceeds 10" << endl << endl;
+        }
+        //check that A1 and A2 are the same dimensions
+        else if(m1 != m2 || n1 != n2){
+            error = 1;
+            cout << "The dimensions of the Matrices are not equal" << endl << endl;
+        }
+        else{
+            A1 = input_arrays(m1,m2,n2,n1, pm1,pm2,pm3,A1,A2,A3,error, 1); // call input matrix fnc
+            A2 = input_arrays(m1,m2,n2,n1,pm1,pm2,pm3,A1,A2,A3,error, 2);
+            A3 = Subtract(m1, n1, pm3,A1, A2, A3); // call subtract matrix fnc
+            prnt(m1,n1,A3);// call prnt matrix fnc
+            cout << endl;
+            pm1 = m1;
+            pm2 = m2;
+            pm3 = m1;
+            pn3 = m1;
+        }
+    }
+    else if(strcmp(op,"Multiply") == 0){
+        cout << endl;
+        cout << "Matrix Multiplication" << endl;
+        cout << endl;
+        // Get dimensions of each array
+        cout << "Number of rows for matrix 1: ";
+        cin >> m1;
+        cout << "Number of columns for matrix 1: ";
+        cin >> n1;
+        cout << "Number of rows for matrix 2: ";
+        cin >> m2;
+        cout << "Number of columns for matrix 2: ";
+        cin >> n2;
+        // set dimensions of third array
+        if(m2 != n1){
+            error = 1;
+            cout << "The dimensions are invlaid for matrix multiplication" << endl << endl;
+        }
+        else if(m1 > 10 || n1 > 10 || m2 > 10 || n2 > 10 || m1 < 1 || n1 < 1 || m2 < 1 || n2 < 1){
+            error = 1;
+            cout << "Error: Row or column size exceeds 10" << endl << endl;
+        }
+        else{
+            A1 = input_arrays(m1,m2,n2,n1, pm1,pm2,pm3,A1,A2,A3,error, 1); // call input matrix fnc
+            A2 = input_arrays(m1,m2,n2,n1,pm1,pm2,pm3,A1,A2,A3,error, 2);
+            A3 = Multiply(m1 ,m2 ,n1 ,n2, pm3,A1 ,A2 ,A3 ); // call multiply matrix fnc
+            prnt(m1,n2,A3);// call prnt matrix fnc
+            cout << endl;
+            pm1 = m1;
+            pm2 = m2;
+            pm3 = m1;
+            pn3 = n2;
+        }
+    }
+        else if(strcmp(op,"Determinant") == 0){
+        cout << endl;
+        cout << "Determinant" << endl;
+        cout << endl;
+        // Get dimensions of each array
+        cout << "Number of rows for the matrix: ";
+        cin >> m1;
+        cout << "Number of columns for the matrix: ";
+        cin >> n1;
+        // check that the matrix is a square matrix
+        if(m1 != n1){
+            error = 1;
+            cout << "Matrix must be a square Matrix" << endl << endl;
+        }
+        else if(m1 < 0 || n1  < 0){
+            error = 1;
+            cout << "Matrix can't have negative dimensions" << endl << endl;
+        }
+        else{
+            A3 = input_arrays(m1,m2,n2,n1,pm1,pm2,pm3,A1,A2,A3,error, 3); // call input matrix fnc
+            cout << endl << "The determinant of the Matrix is: " << det(m1,A3) << endl;  // call det matrix fnc
+            pm3 = m1;
+            pn3 = n1;
+            cout << endl;
+        }
+    }
+    
+    else if(strcmp(op,"Transpose") == 0){
+        cout << endl;
+        cout << "Transpose" << endl;
+        cout << endl;
+        // Get dimensions of each array
+        cout << "Number of rows for the matrix: ";
+        cin >> m1;
+        cout << "Number of columns for the matrix: ";
+        cin >> n1;
+        //cout << pm3;
+        A3 = input_arrays(m1,m2,n2,n1,pm1,pm2,pm3,A1,A2,A3,error, 3); // call input matrix fnc
+        transpose(m1,n1,A3); // call transpose matrix fnc
+        pm3 = m1;
+        pn3 = n1;
+        cout << endl;
+    }
+    else if(strcmp(op,"Inverse") == 0){
+        cout << endl;
+        cout << "Inverse" << endl;
+        cout << endl;
+        // Get dimensions of each array
+        cout << "Number of rows for the matrix: ";
+        cin >> m1;
+        cout << "Number of columns for the matrix: ";
+        cin >> n1;
+        // check that the matrix is a square matrix
+        if(m1 != n1){
+            error = 1;
+            cout << "Matrix must be a square Matrix" << endl << endl;
+        }
+        else if(m1 < 0 || n1  < 0){
+            error = 1;
+            cout << "Matrix can't have negative dimensions" << endl << endl;
+        }
+        else{
+            A3 = input_arrays(m1,m2,n2,n1,pm1,pm2,pm3,A1,A2,A3,error, 3); // call input matrix fnc
+            //check if the array has an inverse with Determinant
+            if(det(m1,A3) == 0){
+                cout  << endl << "The matrix does not have an Inverse" << endl;
+                pm3 = m1;
+                cout << endl;    
+            }
+            else{
+            A3 = inverse(m1,A3); // call inverse matrix fnc
+            pm3 = m1;
+            pn3 = n1;
+            cout << endl;
+            }
+        }
+    }
+    
+    else if(strcmp(op,"Reshape") == 0){
+        cout << endl;
+        cout << "reshape" << endl;
+        cout << endl;
+        // Get dimensions of each array
+        cout << "Number of rows for the matrix: ";
+        cin >> m1;
+        cout << "Number of columns for the matrix: ";
+        cin >> n1;
+        if(m1 < 0 || n1  < 0){
+            error = 1;
+            cout << "Matrix can't have negative dimensions" << endl << endl;
+        }
+        else{
+            A3 = input_arrays(m1,m2,n2,n1,pm1,pm2,pm3,A1,A2,A3,error, 3); // call input matrix fnc
+            pm3 = m1;    
+            pn3 = n1;
+            // Get dimensions of each array
+            cout << endl << "New Array" << endl;
+            cout << "Number of rows for the new matrix: ";
+            cin >> m1;
+            cout << "Number of columns for the new matrix: ";
+            cin >> n1;
+            if(m1 < 0 || n1  < 0){
+                error = 1;
+                cout << "Matrix can't have negative dimensions" << endl << endl;
+            }
+            else if(m1*n1 != pm3*pn3){
+                error = 1;
+                cout << "Incorrect amount of elements in new array" << endl << endl;
+            }
+            else{
+                //cout << pm3 << " " << pn3 << endl;
+                A3 = reshape(A3,pm3,pn3,m1,n1); // call multiply matrix fnc
+                prnt(m1,n1,A3);// call prnt matrix fnc
+                cout << endl;
+                pm3 = m1;    
+                pn3 = n1;
+            }
+        }
+        
+        
+    }
+    
+    else if(strcmp(op,"Resize") == 0){
+        cout << endl;
+        cout << "resize" << endl;
+        cout << endl;
+        // Get dimensions of each array
+        cout << "Number of rows for the matrix: ";
+        cin >> m1;
+        cout << "Number of columns for the matrix: ";
+        cin >> n1;
+        if(m1 < 0 || n1  < 0){
+            error = 1;
+            cout << "Matrix can't have negative dimensions" << endl << endl;
+        }
+        else{
+            A3 = input_arrays(m1,m2,n2,n1,pm1,pm2,pm3,A1,A2,A3,error, 3); // call input matrix fnc
+            pm3 = m1;    
+            pn3 = n1;
+            // Get dimensions of each array
+            cout << endl << "New Array" << endl;
+            cout << "Number of rows for the new matrix: ";
+            cin >> m1;
+            cout << "Number of columns for the new matrix: ";
+            cin >> n1;
+            if(m1 < 0 || n1  < 0){
+                error = 1;
+                cout << "Matrix can't have negative dimensions" << endl << endl;
+            }
+            else{
+                //cout << pm3 << " " << pn3 << endl;
+                A3 = resize(A3,pm3,pn3,m1,n1); // call multiply matrix fnc
+                prnt(m1,n1,A3);// call prnt matrix fnc
+                cout << endl;
+                pm3 = m1;    
+                pn3 = n1;
+            }
+        }
+        
+    }
+    
+    else if(strcmp(op,"exit") == 0){
+        continue;
+    }
+    else{
+    cout << endl;
+    cout << "Invlaid Input" << endl;
+    cout << endl;
+    }
+error = 0; // reset error var
+}
+// free the dynamic memory in the arrays
+    for(int i = 0; i < pm1; i++){
+        delete[] A1[i];
+    }
+    delete[] A1;
+    for(int i = 0; i < pm2; i++){
+        delete[] A2[i];
+    }
+    delete[] A2;
+    for(int i = 0; i < pm3; i++){
+        delete[] A3[i];
+    }
+    delete[] A3;
+
+cout << endl;
+cout << "Have a nice day";
+}
